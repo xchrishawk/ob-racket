@@ -1,0 +1,12 @@
+# -*- mode: gitignore; -*-
+
+# Temporary files
+*~
+\#*\#
+.\#*
+
+# Compiled files
+*.elc
+
+# Packaging
+.cask
