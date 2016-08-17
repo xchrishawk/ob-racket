@@ -58,14 +58,17 @@ The following keywords are currently used for expansion:
 	  (cond
 	   ((equal (car param) :lang) (setq lang (cdr param)))
 	   ((equal (car param) :var) (push (cdr param) vars))))
-	;; Insert #lang directive
-	(insert (format "#lang %s\n" lang))
-	;; Insert defines for each variable
-	(when (not (null vars))
-	  (insert "\n;; Header Variables\n")
-	  (dolist (var (reverse vars))
-	    (insert (format "(define %s %s)\n" (car var) (cdr var)))))
-	;; Insert the remaining body
-	(insert "\n;; Body\n" body)))
+	;; Build the script in the temporary file
+	(org-babel-expand-body:racket/output lang (reverse vars) body)))
     ;; Return the name of the temporary output file
     output-file))
+
+(defun org-babel-expand-body:racket/output (lang vars body)
+  "Expands a Racket code block in the \"output\" format. This format executes the
+entire code block as a script, and returns all output."
+  (insert (format "#lang %s\n" lang))
+  (when (not (null vars))
+    (insert "\n;; Header Variables\n"))
+  (dolist (var vars)
+    (insert (format "(define %s %s)\n" (car var) (cdr var))))
+  (insert "\n;; Body\n" body))
