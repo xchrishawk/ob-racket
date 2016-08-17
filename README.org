@@ -6,6 +6,17 @@ embedding the results of those code blocks in your Org files, and even chaining
 the result from one code block into another code block. See the [[http://orgmode.org/worg/org-contrib/babel/intro.html][Babel intro]] for
 more details on what's possible.
 
+** Features
+
+- Supports variable definitions using the standard *:var* header argument.
+- Selected language can be specified using a custom *:lang* header argument.
+  For example, to run a code block using the *racket/base* language, you can
+  do the following:
+
+#+BEGIN_SRC org
+  ,#+BEGIN_SRC racket :lang racket/base
+#+END_SRC
+
 ** Installation
 
 - Install =ob-racket.el= in your Emacs [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Lisp-Libraries.html#Lisp-Libraries][load path]]
