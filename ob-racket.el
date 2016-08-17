@@ -9,6 +9,11 @@
 
 (require 'ob)
 
+;; -- Variables --
+
+(defvar org-babel-command:racket "/usr/bin/racket"
+  "The path to the Racket interpreter executable.")
+
 ;; -- Babel Functions --
 
 (defun org-babel-prep-session:racket (session params)
@@ -23,13 +28,20 @@ PARAMS, and returns the result."
 	 (temp-file (org-babel-expand-body:racket body processed-params)))
     (with-temp-buffer
       (prog2
-	  (call-process "racket" nil (current-buffer) nil temp-file)
+	  (call-process org-babel-command:racket
+			nil
+			(current-buffer)
+			nil
+			temp-file)
 	  (buffer-substring (point-min) (point-max))
 	(delete-file temp-file)))))
 
 (defun org-babel-expand-body:racket (body processed-params)
   "Expands BODY into a complete Racket script using the parameters in
-PROCESSED-PARAMS. The following keywords are currently used for expansion:
+PROCESSED-PARAMS. The script is stored in a temporary file, and the name of the
+temporary file is returned.
+
+The following keywords are currently used for expansion:
 
 :lang - sets the languaged specified by the #lang directive
 :var - sets a variable (defined using a (define ...) form)"
