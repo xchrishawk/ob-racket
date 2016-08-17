@@ -1,0 +1,31 @@
+* Org-Mode Babel Support for Racket
+
+This Emacs module enables support for the [[https://racket-lang.org][Racket programming language]] in Emacs'
+[[http://orgmode.org/worg/org-contrib/babel/][Org-mode Babel]]. This allows executing Racket code blocks directly from Org mode,
+embedding the results of those code blocks in your Org files, and even chaining
+the result from one code block into another code block. See the [[http://orgmode.org/worg/org-contrib/babel/intro.html][Babel intro]] for
+more details on what's possible.
+
+** Installation
+
+- Install =ob-racket.el= in your Emacs [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Lisp-Libraries.html#Lisp-Libraries][load path]]
+- Add the following to your =.emacs.d= file:
+
+#+BEGIN_SRC emacs-lisp
+  ;; Enable Racket in Org-mode Babel
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((racket . t)))
+#+END_SRC
+
+- If your Racket interpreter is installed in a non-standard location (anywhere
+  other than =/usr/bin/racket=), also add the following to your =.emacs.d= file:
+
+#+BEGIN_SRC emacs-lisp
+  ;; Set path to racket interpreter
+  (setq org-babel-command:racket "/path/goes/here")
+#+END_SRC
+
+** Author
+
+Chris Vig (chris@invictus.so)
