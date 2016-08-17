@@ -6,12 +6,31 @@ embedding the results of those code blocks in your Org files, and even chaining
 the result from one code block into another code block. See the [[http://orgmode.org/worg/org-contrib/babel/intro.html][Babel intro]] for
 more details on what's possible.
 
-** Features
+** Example Usage
 
-- Supports variable definitions using the standard *:var* header argument.
-- Selected language can be specified using a custom *:lang* header argument.
-  For example, to run a code block using the *racket/base* language, you can
-  do the following:
+This example shows how to add a code block implementing the classic recursive
+factorial. With point inside the code block, press =C-c C-c= to execute the
+block. The result will be inserted immediately beneath it.
+
+#+BEGIN_SRC org
+  ,#+BEGIN_SRC racket :var input=10
+    (define (factorial n)
+      (if (= n 1)
+          1
+          (* n (factorial (sub1 n)))))
+    (factorial input)
+  ,#+END_SRC
+
+  ,#+RESULTS:
+  : 3628800
+#+END_SRC
+
+** Supported Header Arguments
+
+- :var :: Allows defining a variable for use in the block.
+- :lang :: Specifies the language used in the =#lang= directive at the beginning
+  of the script. For example, to run a code block using the *racket/base*
+  language, you can enter the following:
 
 #+BEGIN_SRC org
   ,#+BEGIN_SRC racket :lang racket/base
