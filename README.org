@@ -34,7 +34,10 @@ block. The result will be inserted immediately beneath it.
 - :func :: When using the =value= result type, this argument allows you to set
   the name of the wrapping function (so it can be called recursively, as in the
   =factorial= example above).
-- :var :: Allows defining a variable for use in the block.
+- :var :: Allows defining a variable for use in the block. If using the =value=
+  output type, the variable will be passed to the wrapping function as an argument.
+  Otherwise, it will be defined at the top level of the script using a =(define ...)=
+  form.
 
 ** Installation
 
