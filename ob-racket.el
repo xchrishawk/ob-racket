@@ -21,84 +21,65 @@
 
 ;; -- Babel Functions --
 
-(defun org-babel-prep-session:racket (session params)
-  "Sessions are not currently supported for Racket, so this function will always
-signal an error."
-  (error "Sessions are not currently supported for Racket."))
+(defun org-babel-expand-body:racket (body params)
+  "Expands the body of a Racket code block."
+  ;; Currently we don't do any expansion for tangled blocks. Just return
+  ;; body unmodified as specified by the user.
+  body)
 
 (defun org-babel-execute:racket (body params)
-  "Executes the Racket code block contained in BODY using the parameters in
-PARAMS, and returns the result."
-  (let* ((processed-params (org-babel-process-params params))
-	 (temp-file (org-babel-expand-body:racket body processed-params)))
+  "Executes a Racket code block."
+  ;; Round up the stuff we need
+  (let* ((parsed-params (ob-racket--parse-params params))
+	 (expanded-body (org-babel-expand-body:racket body params))
+	 (result-type (nth 0 parsed-params))
+	 (lang (nth 1 parsed-params))
+	 (vars (nth 2 parsed-params))
+	 (temp-file (make-temp-file "ob-racket-")))
+    ;; Build script in temporary file
+    (with-temp-file temp-file
+      (cond
+       ;; Results type is "value" - run in let form
+       ((equal result-type 'value)
+	(let ((vars-string
+	      (mapconcat (lambda (var) (format "[%s (quote %s)]" (car var) (cdr var))) vars " ")))
+	  (insert (format "#lang %s\n(let (%s)\n%s)"
+			  lang
+			  vars-string
+			  expanded-body))))
+       ;; Results type is "output" - run as script
+       ((equal result-type 'output)
+	(let ((vars-string
+	       (mapconcat (lambda (var) (format "(define %s (quote %s))" (car var) (cdr var))) vars "\n")))
+	  (insert (format "#lang %s\n%s\n%s"
+			  lang
+			  vars-string
+			  body))))
+       ;; Unknown result type??
+       (t (error "Invalid result type: %s" result-type))))
+    ;; Run script with Racket interpreter, delete temp file, and return output
     (with-temp-buffer
       (prog2
-	  (call-process org-babel-command:racket
-			nil
-			(current-buffer)
-			nil
-			temp-file)
-	  (buffer-substring (point-min) (point-max))
+	  (call-process org-babel-command:racket nil (current-buffer) nil temp-file)
+	  (buffer-string)
 	(delete-file temp-file)))))
 
-(defun org-babel-expand-body:racket (body processed-params)
-  "Expands BODY into a complete Racket script using the parameters in
-PROCESSED-PARAMS. The script is stored in a temporary file, and the name of the
-temporary file is returned. The following header arguments are currently used
-for script expansion:
+(defun org-babel-prep-session:racket (session params)
+  (error "Racket does not currently support sessions."))
 
-:results - sets the result type - should be either \"value\" or \"output\"
-:lang - sets the languaged specified by the #lang directive
-:func - sets the name of the function when using the \"value\" result type
-:var - sets a variable (defined using a (define ...) form)"
-  (let ((output-file (make-temp-file "ob-racket")))
-    (with-temp-file output-file
-      (let ((result-type nil)
-	    (lang nil)
-	    (func nil)
-	    (vars nil))
-	;; Loop through list of processed parameters and update arguments
-	(dolist (param processed-params)
-	  (let ((key (car param)) (value (cdr param)))
-	    (cond
-	     ((equal key :result-type) (setq result-type value))
-	     ((equal key :lang) (setq lang value))
-	     ((equal key :func) (setq func value))
-	     ((equal key :var) (push value vars)))))
-	;; Build script of appropriate type
-	(apply
-	 (cond
-	  ((string-equal result-type "value") 'org-babel-expand-body:racket/value)
-	  ((string-equal result-type "output") 'org-babel-expand-body:racket/output)
-	  (t (user-error "Unknown result type: %s" result-type)))
-	 (list lang func (reverse vars) body))))
-    ;; Return the name of the temporary output file
-    output-file))
+;; -- Parameter Parsing --
 
-(defun org-babel-expand-body:racket/value (lang func vars body)
-  "Expands a Racket code block in the \"value\" format. This format executes the
-code block as a function, and returns the output of the function. All variables
-will be passed as arguments."
-  (let ((function-name (or func "func"))
-	(argument-list (mapconcat (lambda (var) (format "%s" (car var))) vars " "))
-	(argument-values (mapconcat (lambda (var) (format "%s" (cdr var))) vars " "))
-	(space-if-args (if (null vars) "" " ")))
-    (insert
-     (format "#lang %s\n(define (%s%s%s)\n%s)\n(%s%s%s)\n"
-	     lang
-	     function-name
-	     space-if-args
-	     argument-list
-	     body
-	     function-name
-	     space-if-args
-	     argument-values))))
-
-(defun org-babel-expand-body:racket/output (lang func vars body)
-  "Expands a Racket code block in the \"output\" format. This format executes the
-code block as a complete script, and returns the script's entire output from
-stdout. All variables will be defined prior to executing the body."
-  (let ((define-list
-	  (mapconcat (lambda (var) (format "(define %s %s)" (car var) (cdr var))) vars "\n")))
-    (insert
-     (format "#lang %s\n%s\n%s" lang define-list body))))
+(defun ob-racket--parse-params (params)
+  "Processes and parses parameters for an Org Babel code block. The results are
+returned as a list."
+  (let ((processed-params (org-babel-process-params params))
+	(result-type nil)
+	(lang nil)
+	(vars nil))
+    (dolist (processed-param processed-params)
+      (let ((key (car processed-param)) (value (cdr processed-param)))
+	(cond
+	 ((equal key :result-type) (setq result-type value))
+	 ((equal key :lang) (setq lang value))
+	 ((equal key :var) (push value vars)))))
+    (list result-type lang vars)))

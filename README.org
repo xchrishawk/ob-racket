@@ -13,10 +13,12 @@ factorial. With point inside the code block, press =C-c C-c= to execute the
 block. The result will be inserted immediately beneath it.
 
 #+BEGIN_SRC org
-  ,#+BEGIN_SRC racket :func factorial :var n=10
-    (if (= n 1)
-        1
-        (* n (factorial (sub1 n)))))
+  ,#+BEGIN_SRC racket :var input=10
+    (define (factorial n)
+      (if (= n 1)
+          1
+          (* n (factorial (sub1 n)))))
+    (factorial input)
   ,#+END_SRC
 
   ,#+RESULTS:
@@ -26,14 +28,11 @@ block. The result will be inserted immediately beneath it.
 ** Supported Header Arguments
 
 - :results :: Can be set to either =value= or =output=. If set to =value=, the
-  code block will be wrapped in a function, and only the result of the function
+  code block will be wrapped in a (let ...) form, and only the result of the form
   will recorded. If set to =output=, the code block will be run as a script, and
   all standard output will be recorded. Defaults to =value=.
 - :lang :: Specifies the language used in the =#lang= directive at the beginning
   of the script. Defaults to "racket".
-- :func :: When using the =value= result type, this argument allows you to set
-  the name of the wrapping function (so it can be called recursively, as in the
-  =factorial= example above).
 - :var :: Allows defining a variable for use in the block. If using the =value=
   output type, the variable will be passed to the wrapping function as an argument.
   Otherwise, it will be defined at the top level of the script using a =(define ...)=
