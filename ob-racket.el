@@ -13,7 +13,7 @@
 
 (add-to-list 'org-babel-tangle-lang-exts '("racket" . "rkt"))
 
-(defvar org-babel-default-header-args:racket nil
+(defvar org-babel-default-header-args:racket '((:lang . "racket"))
   "A list of default header args for Racket code blocks.")
 
 (defvar org-babel-command:racket "/usr/bin/racket"
@@ -44,31 +44,61 @@ PARAMS, and returns the result."
 (defun org-babel-expand-body:racket (body processed-params)
   "Expands BODY into a complete Racket script using the parameters in
 PROCESSED-PARAMS. The script is stored in a temporary file, and the name of the
-temporary file is returned.
+temporary file is returned. The following header arguments are currently used
+for script expansion:
 
-The following keywords are currently used for expansion:
-
+:results - sets the result type - should be either \"value\" or \"output\"
 :lang - sets the languaged specified by the #lang directive
+:func - sets the name of the function when using the \"value\" result type
 :var - sets a variable (defined using a (define ...) form)"
   (let ((output-file (make-temp-file "ob-racket")))
     (with-temp-file output-file
-      (let ((lang "racket") (vars nil))
-	;; Parse the processed parameters
+      (let ((result-type nil)
+	    (lang nil)
+	    (func nil)
+	    (vars nil))
+	;; Loop through list of processed parameters and update arguments
 	(dolist (param processed-params)
-	  (cond
-	   ((equal (car param) :lang) (setq lang (cdr param)))
-	   ((equal (car param) :var) (push (cdr param) vars))))
-	;; Build the script in the temporary file
-	(org-babel-expand-body:racket/output lang (reverse vars) body)))
+	  (let ((key (car param)) (value (cdr param)))
+	    (cond
+	     ((equal key :result-type) (setq result-type value))
+	     ((equal key :lang) (setq lang value))
+	     ((equal key :func) (setq func value))
+	     ((equal key :var) (push value vars)))))
+	;; Build script of appropriate type
+	(apply
+	 (cond
+	  ((string-equal result-type "value") 'org-babel-expand-body:racket/value)
+	  ((string-equal result-type "output") 'org-babel-expand-body:racket/output)
+	  (t (user-error "Unknown result type: %s" result-type)))
+	 (list lang func (reverse vars) body))))
     ;; Return the name of the temporary output file
     output-file))
 
-(defun org-babel-expand-body:racket/output (lang vars body)
+(defun org-babel-expand-body:racket/value (lang func vars body)
+  "Expands a Racket code block in the \"value\" format. This format executes the
+code block as a function, and returns the output of the function. All variables
+will be passed as arguments."
+  (let ((function-name (or func "func"))
+	(argument-list (mapconcat (lambda (var) (format "%s" (car var))) vars " "))
+	(argument-values (mapconcat (lambda (var) (format "%s" (cdr var))) vars " "))
+	(space-if-args (if (null vars) "" " ")))
+    (insert
+     (format "#lang %s\n(define (%s%s%s)\n%s)\n(%s%s%s)\n"
+	     lang
+	     function-name
+	     space-if-args
+	     argument-list
+	     body
+	     function-name
+	     space-if-args
+	     argument-values))))
+
+(defun org-babel-expand-body:racket/output (lang func vars body)
   "Expands a Racket code block in the \"output\" format. This format executes the
-entire code block as a script, and returns all output."
-  (insert (format "#lang %s\n" lang))
-  (when (not (null vars))
-    (insert "\n;; Header Variables\n"))
-  (dolist (var vars)
-    (insert (format "(define %s %s)\n" (car var) (cdr var))))
-  (insert "\n;; Body\n" body))
+code block as a complete script, and returns the script's entire output from
+stdout. All variables will be defined prior to executing the body."
+  (let ((define-list
+	  (mapconcat (lambda (var) (format "(define %s %s)" (car var) (cdr var))) vars "\n")))
+    (insert
+     (format "#lang %s\n%s\n%s" lang define-list body))))
