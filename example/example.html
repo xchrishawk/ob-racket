@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>example</title>
+<!-- 2016-08-18 Thu 20:16 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="Chris Vig" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.right  { text-align: center;  }
+  th.left   { text-align: center;   }
+  th.center { text-align: center; }
+  td.right  { text-align: right;  }
+  td.left   { text-align: left;   }
+  td.center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara:nth-child(2) { display: inline; }
+  .footpara { display: block; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">example</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1. Example Org Babel File With Racket</a>
+<ul>
+<li><a href="#sec-1-1">1.1. Recursive Factorial</a>
+<ul>
+<li><a href="#sec-1-1-1">1.1.1. Definition</a></li>
+<li><a href="#sec-1-1-2">1.1.2. Execution</a></li>
+<li><a href="#sec-1-1-3">1.1.3. Calling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> Example Org Babel File With Racket</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+This is an example Org file showing some suggested ways to use the <code>ob-racket</code>
+module with Org Babel integration for <a href="https://racket-lang.org">Racket</a>. To see the raw source for this
+file (instead of Github's processed version), tap the <code>Raw</code> button at the top
+right of this frame.
+</p>
+</div>
+
+<div id="outline-container-sec-1-1" class="outline-3">
+<h3 id="sec-1-1"><span class="section-number-3">1.1</span> Recursive Factorial</h3>
+<div class="outline-text-3" id="text-1-1">
+</div><div id="outline-container-sec-1-1-1" class="outline-4">
+<h4 id="sec-1-1-1"><span class="section-number-4">1.1.1</span> Definition</h4>
+<div class="outline-text-4" id="text-1-1-1">
+<p>
+The code block below shows the recursive factorial that everyone knows and loves:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-racket" id="define-factorial">(define (factorial n)
+  (if (= n 1)
+      1
+      (* n (factorial (sub1 n)))))
+</pre>
+</div>
+
+<p>
+I set the following header arguments for this block:
+</p>
+
+<dl class="org-dl">
+<dt> :tangle </dt><dd>Set to <code>yes</code>, so that the block will be included in <code>example.rkt</code>
+  when we tangle this file.
+</dd>
+<dt> :eval </dt><dd>Set to <code>no</code>. This block only contains a function definition - there's
+no point in executing it by itself with no input.
+</dd>
+<dt> :exports </dt><dd>Set to <code>code</code>, so only the code will be exported.
+</dd>
+</dl>
+</div>
+</div>
+
+<div id="outline-container-sec-1-1-2" class="outline-4">
+<h4 id="sec-1-1-2"><span class="section-number-4">1.1.2</span> Execution</h4>
+<div class="outline-text-4" id="text-1-1-2">
+<p>
+The following block sets up a way to execute the <code>factorial</code> function, so it can
+be quickly called with arbitrary input using the <code>#+CALL</code> macro. We use the
+<b>noweb</b> syntax to include the definition of <code>factorial</code> from the <code>define-factorial</code>
+block above. The code block looks like this:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-org">#+NAME: factorial
+#+BEGIN_SRC racket :tangle no :noweb yes :exports code
+&lt;&lt;define-factorial&gt;&gt;
+(factorial input)
+#+END_SRC
+</pre>
+</div>
+
+<p>
+And the expanded output code block looks like this:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-racket" id="factorial">(define (factorial n)
+  (if (= n 1)
+      1
+      (* n (factorial (sub1 n)))))
+(factorial input)
+</pre>
+</div>
+
+<p>
+Header arguments are as follows:
+</p>
+
+<dl class="org-dl">
+<dt> :tangle </dt><dd>Set to <code>no</code>. The definition is already being tangled above, we don't
+need to tangle it again.
+</dd>
+<dt> :noweb </dt><dd>Enables the <b>noweb</b> syntax we use to embed the function definition.
+</dd>
+<dt> :exports </dt><dd>In this example I have set this to <code>code</code>, so you can see the noweb
+syntax. Normally you would just set this to <code>none</code> to avoid cluttering up the
+output file.
+</dd>
+</dl>
+</div>
+</div>
+
+<div id="outline-container-sec-1-1-3" class="outline-4">
+<h4 id="sec-1-1-3"><span class="section-number-4">1.1.3</span> Calling</h4>
+<div class="outline-text-4" id="text-1-1-3">
+<p>
+Once the above is set up, you can quickly call the <code>factorial</code> function using a
+<code>#+CALL</code> macro, like the following:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-org">#+CALL: factorial(input=10)
+</pre>
+</div>
+
+<p>
+For example, the factorial of 10 is:
+</p>
+
+<pre class="example">
+3628800
+</pre>
+
+<p>
+The factorial of 1000 is:
+</p>
+
+<pre class="example">
+402387260077093773543702433923003985719374864210714632543799910429938512398629020592044208486969404800479988610197196058631666872994808558901323829669944590997424504087073759918823627727188732519779505950995276120874975462497043601418278094646496291056393887437886487337119181045825783647849977012476632889835955735432513185323958463075557409114262417474349347553428646576611667797396668820291207379143853719588249808126867838374559731746136085379534524221586593201928090878297308431392844403281231558611036976801357304216168747609675871348312025478589320767169132448426236131412508780208000261683151027341827977704784635868170164365024153691398281264810213092761244896359928705114964975419909342221566832572080821333186116811553615836546984046708975602900950537616475847728421889679646244945160765353408198901385442487984959953319101723355556602139450399736280750137837615307127761926849034352625200015888535147331611702103968175921510907788019393178114194545257223865541461062892187960223838971476088506276862967146674697562911234082439208160153780889893964518263243671616762179168909779911903754031274622289988005195444414282012187361745992642956581746628302955570299024324153181617210465832036786906117260158783520751516284225540265170483304226143974286933061690897968482590125458327168226458066526769958652682272807075781391858178889652208164348344825993266043367660176999612831860788386150279465955131156552036093988180612138558600301435694527224206344631797460594682573103790084024432438465657245014402821885252470935190620929023136493273497565513958720559654228749774011413346962715422845862377387538230483865688976461927383814900140767310446640259899490222221765904339901886018566526485061799702356193897017860040811889729918311021171229845901641921068884387121855646124960798722908519296819372388642614839657382291123125024186649353143970137428531926649875337218940694281434118520158014123344828015051399694290153483077644569099073152433278288269864602789864321139083506217095002597389863554277196742822248757586765752344220207573630569498825087968928162753848863396909959826280956121450994871701244516461260379029309120889086942028510640182154399457156805941872748998094254742173582401063677404595741785160829230135358081840096996372524230560855903700624271243416909004153690105933983835777939410970027753472000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+</pre>
+
+<p>
+You can also execute the block inline using the following syntax:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-org">call_factorial(input=5)
+</pre>
+</div>
+
+<p>
+For example, the factorial of 5 is =120
+=.
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Chris Vig</p>
+<p class="date">Created: 2016-08-18 Thu 20:16</p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.5.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
