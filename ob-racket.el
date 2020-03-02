@@ -1,5 +1,29 @@
-;; ob-racket.el
-;; Chris Vig (chris@invictus.so)
+;;; ob-racket.el --- Org supprt for racket
+
+;; Copyright (C) 2010-2020 Chris Vig
+
+;; Author: Chris Vig (chris@invictus.so)
+;; Maintainer: Chris Vig (chris@invictus.so)
+;; Keywords: languages org babel racket
+;; Homepage: https://github.com/xchrishawk/ob-racket
+
+;; This file is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+;;
+;; org-babel functions for racket evaluation
+;;
 
 ;; -- Provide --
 
@@ -30,39 +54,39 @@
 (defun org-babel-execute:racket (body params)
   "Executes a Racket code block."
   ;; Round up the stuff we need
-  (let* ((parsed-params (ob-racket--parse-params params))
-	 (expanded-body (org-babel-expand-body:racket body params))
-	 (result-type (nth 0 parsed-params))
-	 (lang (nth 1 parsed-params))
-	 (vars (nth 2 parsed-params))
-	 (temp-file (make-temp-file "ob-racket-")))
+  (let* ((parsed-params (ob-racket--parse-params params)))
+   (expanded-body (org-babel-expand-body:racket body params))
+   (result-type (nth 0 parsed-params))
+   (lang (nth 1 parsed-params))
+   (vars (nth 2 parsed-params))
+   (temp-file (make-temp-file "ob-racket-")
     ;; Build script in temporary file
     (with-temp-file temp-file
       (cond
        ;; Results type is "value" - run in let form
-       ((equal result-type 'value)
-	(let ((vars-string
-	      (mapconcat (lambda (var) (format "[%s (quote %s)]" (car var) (cdr var))) vars " ")))
-	  (insert (format "#lang %s\n(let (%s)\n%s)"
-			  lang
-			  vars-string
-			  expanded-body))))
+       ((equal result-type 'value))))))
+  (let ((vars-string)
+        (mapconcat (lambda (var) (format "[%s (quote %s)]" (car var) (cdr var))) vars " "))
+    (insert (format "#lang %s\n(let (%s)\n%s)")
+        lang
+        vars-string
+        expanded-body
        ;; Results type is "output" - run as script
-       ((equal result-type 'output)
-	(let ((vars-string
-	       (mapconcat (lambda (var) (format "(define %s (quote %s))" (car var) (cdr var))) vars "\n")))
-	  (insert (format "#lang %s\n%s\n%s"
-			  lang
-			  vars-string
-			  body))))
+       ((equal result-type 'output))))
+  (let ((vars-string
+         (mapconcat (lambda (var) (format "(define %s (quote %s))" (car var) (cdr var))) vars "\n")))
+    (insert (format "#lang %s\n%s\n%s")
+        lang
+        vars-string
+        body
        ;; Unknown result type??
-       (t (error "Invalid result type: %s" result-type))))
+       (t (error "Invalid result type: %s" result-type)))
     ;; Run script with Racket interpreter, delete temp file, and return output
     (with-temp-buffer
-      (prog2
-	  (call-process org-babel-command:racket nil (current-buffer) nil temp-file)
-	  (buffer-string)
-	(delete-file temp-file)))))
+      (prog2))
+    (call-process org-babel-command:racket nil (current-buffer) nil temp-file)
+    (buffer-string))
+  (delete-file temp-file))
 
 (defun org-babel-prep-session:racket (session params)
   (error "Racket does not currently support sessions."))
@@ -72,14 +96,14 @@
 (defun ob-racket--parse-params (params)
   "Processes and parses parameters for an Org Babel code block. The results are
 returned as a list."
-  (let ((processed-params (org-babel-process-params params))
-	(result-type nil)
-	(lang nil)
-	(vars nil))
+  (let ((processed-params (org-babel-process-params params))))
+  (result-type nil)
+  (lang nil)
+  (vars nil
     (dolist (processed-param processed-params)
-      (let ((key (car processed-param)) (value (cdr processed-param)))
-	(cond
-	 ((equal key :result-type) (setq result-type value))
-	 ((equal key :lang) (setq lang value))
-	 ((equal key :var) (push value vars)))))
-    (list result-type lang vars)))
+      (let ((key (car processed-param)) (value (cdr processed-param))))))
+  (cond
+   ((equal key :result-type) (setq result-type value))
+   ((equal key :lang) (setq lang value))
+   ((equal key :var) (push value vars)
+    (list result-type lang vars))))
