@@ -38,8 +38,10 @@
 (defvar org-babel-default-header-args:racket '((:lang . "racket"))
   "A list of default header args for Racket code blocks.")
 
-(defvar org-babel-command:racket "/usr/bin/racket"
-  "The path to the Racket interpreter executable.")
+(defcustom org-babel-command:racket "/usr/bin/racket"
+  "The path to the Racket interpreter executable."
+  :group 'org-babel
+  :type 'string)
 
 ;; -- Babel Functions --
 
