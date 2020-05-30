@@ -59,27 +59,28 @@
          (result-type (nth 0 parsed-params))
          (lang (nth 1 parsed-params))
          (vars (nth 2 parsed-params))
-         (requires-statements (nth 3 parsed-params))
-         (temp-file (make-temp-file "ob-racket-")))
+         (requires (nth 3 parsed-params))
+         (temp-file (make-temp-file "ob-racket-"))
+         (requires-string (mapconcat (lambda (r) (format "(require %s)" r)) requires "\n")))
     ;; Build script in temporary file
     (with-temp-file temp-file
       (cond
        ;; Results type is "value" - run in let form
        ((equal result-type 'value)
         (let ((vars-string
-               (mapconcat (lambda (var) (format "[%s (quote %s)]" (car var) (cdr var))) vars " ")))
-          (insert (format "#lang %s\n%s\n(let (%s)\n%s)"
+                (mapconcat (lambda (var) (format "[%s (quote %s)]" (car var) (cdr var))) vars " ")))
+          (insert (format "#lang %s \n%s \n(let (%s) \n%s)"
                           lang
-                          requires-statements
+                          requires-string
                           vars-string
                           expanded-body))))
        ;; Results type is "output" - run as script
        ((equal result-type 'output)
         (let ((vars-string
                (mapconcat (lambda (var) (format "(define %s (quote %s))" (car var) (cdr var))) vars "\n")))
-          (insert (format "#lang %s\n%s\n%s\n%s"
+          (insert (format "#lang %s \n%s \n%s \n%s"
                           lang
-                          requires-statements
+                          requires-string
                           vars-string
                           body))))
        ;; Unknown result type??
@@ -102,11 +103,13 @@ returned as a list."
   (let ((processed-params (org-babel-process-params params))
         (result-type nil)
         (lang nil)
+        (requires nil)
         (vars nil))
     (dolist (processed-param processed-params)
       (let ((key (car processed-param)) (value (cdr processed-param)))
         (cond
          ((equal key :result-type) (setq result-type value))
          ((equal key :lang) (setq lang value))
-         ((equal key :var) (push value vars)))))
-    (list result-type lang vars)))
+         ((equal key :var) (push value vars))
+         ((equal key :require) (push value requires)))))
+    (list result-type lang vars requires)))
