@@ -56,33 +56,34 @@
   ;; Round up the stuff we need
   (let* ((parsed-params (ob-racket--parse-params params))
          (expanded-body (org-babel-expand-body:racket body params))
-         (result-type (nth 0 parsed-params))
-         (lang (nth 1 parsed-params))
-         (vars (nth 2 parsed-params))
-         (requires (nth 3 parsed-params))
+         (result-type (cadr (assoc 'result-type parsed-params)))
          (temp-file (make-temp-file "ob-racket-"))
-         (requires-string (mapconcat (lambda (r) (format "(require %s)" r)) requires "\n")))
-    ;; Build script in temporary file
+         (requires-string (mapconcat (lambda (r) (format "(require %s)" r))
+                                     (cadr (assoc 'requires parsed-params))
+                                     "\n")))
     (with-temp-file temp-file
       (cond
        ;; Results type is "value" - run in let form
        ((equal result-type 'value)
-        (let ((vars-string
-                (mapconcat (lambda (var) (format "[%s (quote %s)]" (car var) (cdr var))) vars " ")))
+        (let ((vars-string (mapconcat (lambda (var) (format "[%s (quote %s)]" (car var) (cdr var)))
+                                      (cadr (assoc 'vars parsed-params))
+                                      " ")))
           (insert (format "#lang %s \n%s \n(let (%s) \n%s)"
-                          lang
+                          (cadr (assoc 'racket-lang parsed-params))
                           requires-string
                           vars-string
                           expanded-body))))
        ;; Results type is "output" - run as script
        ((equal result-type 'output)
-        (let ((vars-string
-               (mapconcat (lambda (var) (format "(define %s (quote %s))" (car var) (cdr var))) vars "\n")))
-          (insert (format "#lang %s \n%s \n%s \n%s"
-                          lang
-                          requires-string
-                          vars-string
-                          body))))
+        (let* ((vars-string (mapconcat (lambda (var) (format "(define %s (quote %s))" (car var) (cdr var)))
+                                       (cadr (assoc 'vars parsed-params))
+                                       "\n"))
+               (output (format "#lang %s \n%s \n%s \n%s"
+                               (cadr (assoc 'racket-lang parsed-params))
+                               requires-string
+                               vars-string
+                               expanded-body)))
+          (insert output)))
        ;; Unknown result type??
        (t (error "Invalid result type: %s" result-type))))
     ;; Run script with Racket interpreter, delete temp file, and return output
@@ -104,12 +105,19 @@ returned as a list."
         (result-type nil)
         (lang nil)
         (requires nil)
-        (vars nil))
+        (vars nil)
+        (racket-lang "racket"))
     (dolist (processed-param processed-params)
-      (let ((key (car processed-param)) (value (cdr processed-param)))
+      (let ((key (car processed-param))
+            (value (cdr processed-param)))
         (cond
          ((equal key :result-type) (setq result-type value))
          ((equal key :lang) (setq lang value))
          ((equal key :var) (push value vars))
-         ((equal key :require) (push value requires)))))
-    (list result-type lang vars requires)))
+         ((equal key :require) (push value requires))
+         ((equal key :racket-lang) (setq racket-lang value)))))
+    `((lang ,lang)
+      (result-type ,result-type)
+      (vars ,vars)
+      (requires ,requires)
+      (racket-lang ,racket-lang))))
