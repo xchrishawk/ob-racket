@@ -38,6 +38,14 @@
 (defvar org-babel-default-header-args:racket '((:lang . "racket"))
   "A list of default header args for Racket code blocks.")
 
+(defun ob-racket--format-require (requirement)
+  "Format require statement for Racket"
+  (format "(require %s)" requirement))
+
+(defun ob-racket--format-var (var-name var-value)
+  "Format variable assignment statement for racket"
+  (format "(define %s (quote %s))" var-name var-value))
+
 (defcustom org-babel-command:racket "/usr/bin/racket"
   "The path to the Racket interpreter executable."
   :group 'org-babel
@@ -45,47 +53,41 @@
 
 ;; -- Babel Functions --
 
-(defun org-babel-expand-body:racket (body params)
+(defun org-babel-expand-body:racket (body unparsed-params)
   "Expands the body of a Racket code block."
-  ;; Currently we don't do any expansion for tangled blocks. Just return
-  ;; body unmodified as specified by the user.
-  body)
+  (let* ((lines-of-body (split-string body "\n"))
+         (first-line (car lines-of-body))
+         (params (ob-racket--parse-params unparsed-params))
+         (output-lines-stack '()))
+    (cl-flet* ((out (l) (add-to-list 'output-lines-stack l))
+               (out-headers ()
+                            (when-let* ((requires (assoc 'requires params)))
+                              (out (mapconcat 'ob-racket--format-require
+                                              (cadr requires)
+                                              "\n")))
+                            (when-let* ((vars (cadr (assoc 'vars params))))
+                              (out (mapconcat (lambda (var) (ob-racket--format-var (car var) (cdr var)))
+                                              vars
+                                              "\n")))))
+      ;; actually not sure this next part is necessary
+      (cond ((string-match "#lang" first-line)
+             (out first-line)
+             (out-headers))
+            (t
+             (out "#lang racket")
+             (out-headers)
+             (out first-line)))
+      (dolist (l (cdr lines-of-body))
+        (out l))
+      (string-join (reverse output-lines-stack) "\n"))))
+
 
 (defun org-babel-execute:racket (body params)
   "Executes a Racket code block."
-  ;; Round up the stuff we need
-  (let* ((parsed-params (ob-racket--parse-params params))
-         (expanded-body (org-babel-expand-body:racket body params))
-         (result-type (cadr (assoc 'result-type parsed-params)))
-         (temp-file (make-temp-file "ob-racket-"))
-         (requires-string (mapconcat (lambda (r) (format "(require %s)" r))
-                                     (cadr (assoc 'requires parsed-params))
-                                     "\n")))
+  (let* ((expanded-body (org-babel-expand-body:racket body params))
+         (temp-file (make-temp-file "ob-racket-")))
     (with-temp-file temp-file
-      (cond
-       ;; Results type is "value" - run in let form
-       ((equal result-type 'value)
-        (let ((vars-string (mapconcat (lambda (var) (format "[%s (quote %s)]" (car var) (cdr var)))
-                                      (cadr (assoc 'vars parsed-params))
-                                      " ")))
-          (insert (format "#lang %s \n%s \n(let (%s) \n%s)"
-                          (cadr (assoc 'racket-lang parsed-params))
-                          requires-string
-                          vars-string
-                          expanded-body))))
-       ;; Results type is "output" - run as script
-       ((equal result-type 'output)
-        (let* ((vars-string (mapconcat (lambda (var) (format "(define %s (quote %s))" (car var) (cdr var)))
-                                       (cadr (assoc 'vars parsed-params))
-                                       "\n"))
-               (output (format "#lang %s \n%s \n%s \n%s"
-                               (cadr (assoc 'racket-lang parsed-params))
-                               requires-string
-                               vars-string
-                               expanded-body)))
-          (insert output)))
-       ;; Unknown result type??
-       (t (error "Invalid result type: %s" result-type))))
+      (insert expanded-body))
     ;; Run script with Racket interpreter, delete temp file, and return output
     (with-temp-buffer
       (prog2
