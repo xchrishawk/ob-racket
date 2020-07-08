@@ -25,14 +25,28 @@
      : 3628800
    #+END_SRC
 
+   
+   This example shows how you can use custom languages. To run this you will need [[file:20200704153240-beautiful_racket.org][Beautiful Racket]] installed.
+   #+begin_src org
+      ,#+BEGIN_SRC racket :results output
+        #lang reader stacker-demo/stacker
+        4
+        8
+        +
+        3
+        *
+      ,#+END_SRC
+
+      ,#+RESULTS:
+      : 36
+  #+end_src
+
 ** Supported Header Arguments
 
    - :results :: Can be set to either =value= or =output=. If set to =value=, the
      code block will be wrapped in a (let ...) form, and only the result of the form
      will recorded. If set to =output=, the code block will be run as a script, and
      all standard output will be recorded. Defaults to =value=.
-   - :lang :: Specifies the language used in the =#lang= directive at the beginning
-     of the script. Defaults to "racket".
    - :var :: Allows defining a variable for use in the block. If using the =value=
      output type, the variable will be passed to the wrapping function as an argument.
      Otherwise, it will be defined at the top level of the script using a =(define ...)=
