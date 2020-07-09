@@ -58,8 +58,9 @@
   (let* ((lines-of-body (split-string body "\n"))
          (first-line (car lines-of-body))
          (params (ob-racket--parse-params unparsed-params))
-         (output-lines-stack '()))
-    (cl-flet* ((out (l) (add-to-list 'output-lines-stack l))
+         (output-lines-stack '())
+         (print-length nil)) ;; Used by the format function which is invoked inside string formatting
+    (cl-flet* ((out (l) (push l output-lines-stack))
                (out-headers ()
                             (when-let* ((requires (assoc 'requires params)))
                               (out (mapconcat 'ob-racket--format-require
