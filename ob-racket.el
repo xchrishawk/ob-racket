@@ -106,7 +106,6 @@
 returned as a list."
   (let ((processed-params (org-babel-process-params params))
         (result-type nil)
-        (lang nil)
         (requires nil)
         (vars nil))
     (dolist (processed-param processed-params)
@@ -114,10 +113,8 @@ returned as a list."
             (value (cdr processed-param)))
         (cond
          ((equal key :result-type) (setq result-type value))
-         ((equal key :lang) (setq lang value))
          ((equal key :var) (push value vars))
          ((equal key :require) (push value requires)))))
-    `((lang ,lang)
-      (result-type ,result-type)
+    `((result-type ,result-type)
       (vars ,vars)
       (requires ,requires))))
