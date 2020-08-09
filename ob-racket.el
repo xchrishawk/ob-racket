@@ -44,7 +44,7 @@
 
 (defun ob-racket--format-var (var-name var-value)
   "Format variable assignment statement for racket"
-  (format "(define %s (quote %s))" var-name var-value))
+  (format "(define %s (quote %S))" var-name var-value))
 
 (defcustom org-babel-command:racket "/usr/bin/racket"
   "The path to the Racket interpreter executable."
