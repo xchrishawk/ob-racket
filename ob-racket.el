@@ -46,6 +46,11 @@
   "Format variable assignment statement for racket"
   (format "(define %s (quote %S))" var-name var-value))
 
+(defun ob-racket--expand-named-src-block  (blockname)
+  (save-excursion
+    (goto-char (org-babel-find-named-block blockname))
+    (org-babel-expand-src-block)))
+
 (defcustom org-babel-command:racket "/usr/bin/racket"
   "The path to the Racket interpreter executable."
   :group 'org-babel
@@ -53,11 +58,10 @@
 
 ;; -- Babel Functions --
 
-(defun org-babel-expand-body:racket (body unparsed-params)
+(defun org-babel-expand-body:racket (body params)
   "Expands the body of a Racket code block."
   (let* ((lines-of-body (split-string body "\n"))
          (first-line (car lines-of-body))
-         (params (ob-racket--parse-params unparsed-params))
          (output-lines-stack '())
          (print-length nil)) ;; Used by the format function which is invoked inside string formatting
     (cl-flet* ((out (l) (push l output-lines-stack))
@@ -83,18 +87,25 @@
       (string-join (reverse output-lines-stack) "\n"))))
 
 
-(defun org-babel-execute:racket (body params)
+(defun org-babel-execute:racket (body unparsed-params)
   "Executes a Racket code block."
-  (let* ((expanded-body (org-babel-expand-body:racket body params))
-         (temp-file (make-temp-file "ob-racket-")))
-    (with-temp-file temp-file
-      (insert expanded-body))
+  (let* ((params (ob-racket--parse-params unparsed-params))
+         (main-src (org-babel-expand-body:racket body params))
+         (temporary-file-directory (file-name-as-directory (make-temp-file "ob-racket-" 'make-directory-only)))
+         (main-filename (concat temporary-file-directory (make-temp-name "ob-racket") "rkt")))
+    (dolist (blockname (cadr (assoc 'adjacent-files params)))
+      (let ((filename (concat temporary-file-directory blockname))
+            (src (ob-racket--expand-named-src-block blockname)))
+        (with-temp-file filename
+          (insert src))))
+    (with-temp-file main-filename
+      (insert main-src))
     ;; Run script with Racket interpreter, delete temp file, and return output
     (with-temp-buffer
       (prog2
-          (call-process org-babel-command:racket nil (current-buffer) nil temp-file)
+          (call-process org-babel-command:racket nil (current-buffer) nil main-filename)
           (buffer-string)
-        (delete-file temp-file)))))
+        (delete-directory temporary-file-directory 'recursive)))))
 
 (defun org-babel-prep-session:racket (session params)
   (error "Racket does not currently support sessions."))
@@ -107,6 +118,7 @@ returned as a list."
   (let ((processed-params (org-babel-process-params params))
         (result-type nil)
         (requires nil)
+        (adjacent-files nil)
         (vars nil))
     (dolist (processed-param processed-params)
       (let ((key (car processed-param))
@@ -114,7 +126,9 @@ returned as a list."
         (cond
          ((equal key :result-type) (setq result-type value))
          ((equal key :var) (push value vars))
+         ((equal key :adjacent-file) (push value adjacent-files))
          ((equal key :require) (push value requires)))))
     `((result-type ,result-type)
       (vars ,vars)
+      (adjacent-files ,adjacent-files)
       (requires ,requires))))
