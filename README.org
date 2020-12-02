@@ -47,59 +47,63 @@
     this by naming a block and then referencing via the ~:adjacent-file~ header.
 
 
-    #+name: stacker-reader-expander.rkt
-    #+begin_src racket :eval no :noweb strip-export :tangle
-      #lang br/quicklang
+    #+begin_src org
+      #+name: stacker-reader-expander.rkt
+      ,#+begin_src racket :eval no :noweb strip-export :tangle
+        #lang br/quicklang
 
-      (define (read-syntax path port)
-        (define src-lines (port->lines port))
-        (define src-datums (format-datums '(handle ~a) src-lines))
-        (define module-datum `(module stacker-mod "./stacker-reader-expander.rkt"
-                                ,@src-datums))
-        (datum->syntax #f module-datum))
-      (provide read-syntax)
+        (define (read-syntax path port)
+          (define src-lines (port->lines port))
+          (define src-datums (format-datums '(handle ~a) src-lines))
+          (define module-datum `(module stacker-mod "./stacker-reader-expander.rkt"
+                                  ,@src-datums))
+          (datum->syntax #f module-datum))
+        (provide read-syntax)
 
-      (define-macro (stacker-module-begin HANDLE-EXPR ...)
-        #'(#%module-begin
-           HANDLE-EXPR ...
-           (display (first stack))))
-      (provide (rename-out [stacker-module-begin #%module-begin]))
+        (define-macro (stacker-module-begin HANDLE-EXPR ...)
+          #'(#%module-begin
+            HANDLE-EXPR ...
+            (display (first stack))))
+        (provide (rename-out [stacker-module-begin #%module-begin]))
 
 
-      (define stack empty)
+        (define stack empty)
 
-      (define (pop-stack!)
-        (define item (first stack))
-        (set! stack (rest stack))
-        item)
+        (define (pop-stack!)
+          (define item (first stack))
+          (set! stack (rest stack))
+          item)
 
-      (define (push-stack! item)
-        (set! stack (cons item stack)))
+        (define (push-stack! item)
+          (set! stack (cons item stack)))
 
-      (define (handle [x #f])
-        (when x
-          (cond
-            [(number? x) (push-stack! x)]
-            [(or (equal? + x)
-                 (equal? * x))
-             (define op-result (x (pop-stack!) (pop-stack!)))
-             (push-stack! op-result)])))
-      (provide handle + *)
+        (define (handle [x #f])
+          (when x
+            (cond
+              [(number? x) (push-stack! x)]
+              [(or (equal? + x)
+                  (equal? * x))
+              (define op-result (x (pop-stack!) (pop-stack!)))
+              (push-stack! op-result)])))
+        (provide handle + *)
+      ,#+end_src
     #+end_src
 
     This will now work!
 
-    #+begin_src racket :adjacent-file stacker-reader-expander.rkt
-      #lang reader "./stacker-reader-expander.rkt"
-      4
-      8
-      +
-      3
-      ,*
-    #+end_src
+    #+begin_src org
+      ,#+begin_src racket :adjacent-file stacker-reader-expander.rkt
+        #lang reader "./stacker-reader-expander.rkt"
+        4
+        8
+        +
+        3
+        ,*
+      ,#+end_src
 
-    #+RESULTS:
-    : 36
+      #+RESULTS:
+      : 36
+    #+end_src
 
 ** Supported Header Arguments
 
