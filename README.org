@@ -126,10 +126,12 @@
      in the same document. This block source will be expanded and emitted
      adjacent to the main file during execution. This is especially useful for
      implementing languages in one block and testing them in another. Note that
-     at the moment, multiple ~:adjacent-file~ blocks are not supported.
+     at the moment, multiple ~:adjacent-file~ blocks are not supported. You can
+     however pass a white-space-separated list to this argument eg
+     ~:adjacent-file foo1.rkt foo2.rkt~ where there are blocks named both
+     ~foo1.rkt~ and ~foo2.rkt~ in the same document.
 
-
-
+     
 ** Installation
 
    - Install =ob-racket.el= in your Emacs [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Lisp-Libraries.html#Lisp-Libraries][load path]]

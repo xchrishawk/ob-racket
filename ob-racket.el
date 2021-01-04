@@ -126,7 +126,7 @@ returned as a list."
         (cond
          ((equal key :result-type) (setq result-type value))
          ((equal key :var) (push value vars))
-         ((equal key :adjacent-file) (push value adjacent-files))
+         ((equal key :adjacent-file) (setq adjacent-files (split-string value "\s+")))
          ((equal key :require) (push value requires)))))
     `((result-type ,result-type)
       (vars ,vars)
