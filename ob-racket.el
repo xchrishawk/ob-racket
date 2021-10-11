@@ -92,7 +92,7 @@
   (let* ((params (ob-racket--parse-params unparsed-params))
          (main-src (org-babel-expand-body:racket body params))
          (temporary-file-directory (file-name-as-directory (make-temp-file "ob-racket-" 'make-directory-only)))
-         (main-filename (concat temporary-file-directory (make-temp-name "ob-racket") "rkt")))
+         (main-filename (concat temporary-file-directory (make-temp-name "ob-racket") ".rkt")))
     (dolist (blockname (cadr (assoc 'adjacent-files params)))
       (let ((filename (concat temporary-file-directory blockname))
             (src (ob-racket--expand-named-src-block blockname)))
@@ -103,7 +103,8 @@
     ;; Run script with Racket interpreter, delete temp file, and return output
     (with-temp-buffer
       (prog2
-          (call-process org-babel-command:racket nil (current-buffer) nil main-filename)
+          (let ((default-directory temporary-file-directory))
+            (call-process org-babel-command:racket nil (current-buffer) nil main-filename))
           (buffer-string)
         (delete-directory temporary-file-directory 'recursive)))))
 
