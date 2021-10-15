@@ -1,63 +1,161 @@
 * Org-Mode Babel Support for Racket
 
-This Emacs module enables support for the [[https://racket-lang.org][Racket programming language]] in Emacs'
-[[http://orgmode.org/worg/org-contrib/babel/][Org-mode Babel]]. This allows executing Racket code blocks directly from Org mode,
-embedding the results of those code blocks in your Org files, and even chaining
-the result from one code block into another code block. See the [[http://orgmode.org/worg/org-contrib/babel/intro.html][Babel intro]] for
-more details on what's possible.
+  This Emacs module enables support for the [[https://racket-lang.org][Racket programming language]] in Emacs'
+  [[http://orgmode.org/worg/org-contrib/babel/][Org-mode Babel]]. This allows executing Racket code blocks directly from Org mode,
+  embedding the results of those code blocks in your Org files, and even chaining
+  the result from one code block into another code block. See the [[http://orgmode.org/worg/org-contrib/babel/intro.html][Babel intro]] for
+  more details on what's possible.
 
 ** Example Usage
 
-This example shows how to add a code block implementing the classic recursive
-factorial. With point inside the code block, press =C-c C-c= to execute the
-block. The result will be inserted immediately beneath it.
+   This example shows how to add a code block implementing the classic recursive
+   factorial. With point inside the code block, press =C-c C-c= to execute the
+   block. The result will be inserted immediately beneath it.
 
-#+BEGIN_SRC org
-  ,#+BEGIN_SRC racket :var input=10
-    (define (factorial n)
-      (if (= n 1)
-          1
-          (* n (factorial (sub1 n)))))
-    (factorial input)
-  ,#+END_SRC
+   #+BEGIN_SRC org
+     ,#+BEGIN_SRC racket :var input=10
+       (define (factorial n)
+         (if (= n 1)
+             1
+             (* n (factorial (sub1 n)))))
+       (factorial input)
+     ,#+END_SRC
 
-  ,#+RESULTS:
-  : 3628800
-#+END_SRC
+     ,#+RESULTS:
+     : 3628800
+   #+END_SRC
+
+
+   This example shows how you can use custom languages. To run this you will need [[file:20200704153240-beautiful_racket.org][Beautiful Racket]] installed.
+   #+begin_src org
+     ,#+BEGIN_SRC racket :results output
+       #lang reader stacker-demo/stacker
+       4
+       8
+       +
+       3
+       ,,*
+     ,#+END_SRC
+
+     ,#+RESULTS:
+     : 36
+   #+end_src
+
+*** Custom Languages
+    To best implement and test a custom language we have to be able to emit the
+    language implementation in a known location next to its usage. We can do
+    this by naming a block and then referencing via the ~:adjacent-file~ header.
+
+
+    #+begin_src org
+      #+name: stacker-reader-expander.rkt
+      ,#+begin_src racket :eval no :noweb strip-export :tangle
+        #lang br/quicklang
+
+        (define (read-syntax path port)
+          (define src-lines (port->lines port))
+          (define src-datums (format-datums '(handle ~a) src-lines))
+          (define module-datum `(module stacker-mod "./stacker-reader-expander.rkt"
+                                  ,@src-datums))
+          (datum->syntax #f module-datum))
+        (provide read-syntax)
+
+        (define-macro (stacker-module-begin HANDLE-EXPR ...)
+          #'(#%module-begin
+            HANDLE-EXPR ...
+            (display (first stack))))
+        (provide (rename-out [stacker-module-begin #%module-begin]))
+
+
+        (define stack empty)
+
+        (define (pop-stack!)
+          (define item (first stack))
+          (set! stack (rest stack))
+          item)
+
+        (define (push-stack! item)
+          (set! stack (cons item stack)))
+
+        (define (handle [x #f])
+          (when x
+            (cond
+              [(number? x) (push-stack! x)]
+              [(or (equal? + x)
+                  (equal? * x))
+              (define op-result (x (pop-stack!) (pop-stack!)))
+              (push-stack! op-result)])))
+        (provide handle + *)
+      ,#+end_src
+    #+end_src
+
+    This will now work!
+
+    #+begin_src org
+      ,#+begin_src racket :adjacent-file stacker-reader-expander.rkt
+        #lang reader "./stacker-reader-expander.rkt"
+        4
+        8
+        +
+        3
+        ,*
+      ,#+end_src
+
+      #+RESULTS:
+      : 36
+    #+end_src
 
 ** Supported Header Arguments
 
-- :results :: Can be set to either =value= or =output=. If set to =value=, the
-  code block will be wrapped in a (let ...) form, and only the result of the form
-  will recorded. If set to =output=, the code block will be run as a script, and
-  all standard output will be recorded. Defaults to =value=.
-- :lang :: Specifies the language used in the =#lang= directive at the beginning
-  of the script. Defaults to "racket".
-- :var :: Allows defining a variable for use in the block. If using the =value=
-  output type, the variable will be passed to the wrapping function as an argument.
-  Otherwise, it will be defined at the top level of the script using a =(define ...)=
-  form.
+   - :results :: Can be set to either =value= or =output=. If set to =value=, the
+     code block will be wrapped in a (let ...) form, and only the result of the form
+     will recorded. If set to =output=, the code block will be run as a script, and
+     all standard output will be recorded. Defaults to =value=.
+   - :var :: Allows defining a variable for use in the block. If using the =value=
+     output type, the variable will be passed to the wrapping function as an argument.
+     Otherwise, it will be defined at the top level of the script using a =(define ...)=
+     form.
+   - :require :: =DEPRECATED= Allows you to use require statements. Because the way =:results
+     value= works is by wrapping everything in a =let=, you cannot normally use
+     a =require= statement (these have to be top-level). To help, =:require
+     racket/date= will generate =(require racket/date)= outside the =let= block.
+     Multiple =require= statements can be used and they may or may not be
+     quoted. While not strictly necessary for =:results output=, will work
+     anyways to keep with the convention.
+   - :adjacent-file :: Should be the name of another (presumably Racket) block
+     in the same document. This block source will be expanded and emitted
+     adjacent to the main file during execution. This is especially useful for
+     implementing languages in one block and testing them in another. Note that
+     at the moment, multiple ~:adjacent-file~ blocks are not supported. You can
+     however pass a white-space-separated list to this argument eg
+     ~:adjacent-file foo1.rkt foo2.rkt~ where there are blocks named both
+     ~foo1.rkt~ and ~foo2.rkt~ in the same document.
 
+     
 ** Installation
 
-- Install =ob-racket.el= in your Emacs [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Lisp-Libraries.html#Lisp-Libraries][load path]]
-- Add the following to your =.emacs.d= file:
+   - Install =ob-racket.el= in your Emacs [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Lisp-Libraries.html#Lisp-Libraries][load path]]
+   - Add the following to your =.emacs.d= file:
 
-#+BEGIN_SRC emacs-lisp
-  ;; Enable Racket in Org-mode Babel
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((racket . t)))
-#+END_SRC
+   #+BEGIN_SRC emacs-lisp
+     ;; Enable Racket in Org-mode Babel
+     (org-babel-do-load-languages
+      'org-babel-load-languages
+      '((racket . t)))
+   #+END_SRC
 
-- If your Racket interpreter is installed in a non-standard location (anywhere
-  other than =/usr/bin/racket=), also add the following to your =.emacs.d= file:
+   - If your Racket interpreter is installed in a non-standard location (anywhere
+     other than =/usr/bin/racket=), also add the following to your =.emacs.d= file:
 
-#+BEGIN_SRC emacs-lisp
-  ;; Set path to racket interpreter
-  (setq org-babel-command:racket "/path/goes/here")
-#+END_SRC
+   #+BEGIN_SRC emacs-lisp
+     ;; Set path to racket interpreter
+     (setq org-babel-command:racket "/path/goes/here")
+   #+END_SRC
 
 ** Author
 
-Chris Vig (chris@invictus.so)
+   Chris Vig (chris@invictus.so)
+
+*** Contributors
+
+    - [[http://georgemauer.net][George Mauer]]
